@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Academy Number KOTLIN</string>
+    <string name="error_text">Arquivo não pertence à Lista de Inscritos da AppAcademy ou não é compatível!</string>
+</resources>
