@@ -21,7 +21,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { //lib de permissões de acesso
+class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks /*lib de permissões de acesso*/{
     val PICK_CSV_FILE = 2
     val REQUEST_ACESS = 182
     val REQUEST_WRITE = 183
@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
                         val bundle = intent.extras
                         val uri = bundle!!.get(Intent.EXTRA_STREAM) as Uri
                         csvToPessoa(uri)
-                        setTextWithCSV()
+                        setTextWithInfos()
                         salvarCSV()
                     }catch (e:Exception){
                         textView.text = applicationContext.getString(R.string.error_text)
@@ -57,16 +57,15 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
 
     ////functions
     @RequiresApi(Build.VERSION_CODES.N)
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) { //trata o arquivo que o usuário seleciona
         if (requestCode == PICK_CSV_FILE && resultCode == Activity.RESULT_OK) {
             try {
                 csvToPessoa(data!!.data!!)
-                setTextWithCSV()
+                setTextWithInfos()
                 salvarCSV()
             } catch (e: Exception) {
                 textView.text = applicationContext.getString(R.string.error_text)
             }
-
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
@@ -74,7 +73,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
     private fun initView() {
         textView = findViewById(R.id.text_view)
         btn_choose_file = findViewById(R.id.choose_file)
-    }
+    } //inicia a View da Activity - void
 
     private fun chooseFile() {
         val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -83,7 +82,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
             putExtra(DocumentsContract.EXTRA_INITIAL_URI, PICK_CSV_FILE)
         }
         startActivityForResult(intent, PICK_CSV_FILE)
-    }
+    }//Intent que inicia a tela de selecionar arquivos (text/comma-separated-values) - void
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
     }
@@ -97,7 +96,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
+    } //verifica se a permissão foi concebida - void
 
     private fun askPermissionExternalStorage() {
         EasyPermissions.requestPermissions(
@@ -111,7 +110,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
                 .setNegativeButtonText("Cancelar")
                 .build()
         )
-    }
+    } //exige permissão de acesso para acessar a memória - void
 
     private fun askPermissionWriteExternalStorage() {
         EasyPermissions.requestPermissions(
@@ -125,7 +124,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
                 .setNegativeButtonText("Cancelar")
                 .build()
         )
-    }
+    } //exige permissão de acesso para escrever na memória - void
 
     @RequiresApi(Build.VERSION_CODES.N)
     private fun csvToPessoa(data: Uri){
@@ -146,7 +145,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
                 }
             }
         }
-    }
+    } //transforma CSV em Objeto Pessoa - void
 
     private fun getPorcentagemDeCandidatosPorVaga(vaga: String): Int {
         var count = 0
@@ -156,7 +155,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
             }
         }
         return (100 * count) / dataClasses!!.size
-    }
+    } //retorna a porcentagem de candidatos por vaga - return Int
 
     private fun getIdadeMediaCandidatosPorVaga(vaga: String): Int {
         var sumAge = 0
@@ -168,7 +167,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
             }
         }
         return sumAge / count
-    }
+    } //retorna a média de idade por vaga - return Int
 
     private fun getQuantidadeEstadosPresentes(): Int {
         val estado = arrayListOf<String>()
@@ -178,7 +177,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
             }
         }
         return estado.size
-    }
+    } // retorna quantidade de estados que o CSV guarda - return Int
 
     private fun getQuantidadeDeCandidatosPorEstado(): HashMap<String, Int> {
         val map: HashMap<String, Int> = hashMapOf()
@@ -190,7 +189,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
             }
         }
         return map.toList().sortedBy { (_, value) -> value }.toMap() as HashMap
-    }
+    } //retorna os candidatos e seu respectivo estado - return HashMap
 
     private fun getProfessorAndroid(): Pessoa {
         var professor: ArrayList<Pessoa> = arrayListOf()
@@ -267,7 +266,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
         auxiliar = arrayListOf()
 
         return professor.first()
-    }
+    } //retorna o professor Android - return Pessoa
 
     private fun getProfessorIOS(): Pessoa {
         var professor = arrayListOf<Pessoa>()
@@ -288,11 +287,11 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
         auxiliar = arrayListOf()
 
         return professor.first()
-    }
+    } //retorna o professor IOS - return Pessoa
 
     private fun isNumeroPrimo(idade: Int): Boolean {
         return !((idade % 2) == 0 && idade != 2 || idade == 1)
-    }
+    } //verifica se o número/idade é um número primo - return Boolean
 
     private fun pertenceAMesmaDecada(idade1: Int, idade2: Int): Boolean {
         val anoIdade1 =
@@ -300,9 +299,9 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
         val anoIdade2 =
             (Calendar.getInstance().get(Calendar.YEAR) - idade2).toString().toCharArray()[2]
         return anoIdade1 == anoIdade2
-    }
+    } //verifica se as idades pertencem a mesma década - return Boolean
 
-    private fun setTextWithCSV() {
+    private fun setTextWithInfos() {
         textView.text = "Proporção de candidatos por vaga:\n" +
                 "Android:  ${getPorcentagemDeCandidatosPorVaga("Android")}% \n" +
                 "iOS:  ${getPorcentagemDeCandidatosPorVaga("iOS")}% \n" +
@@ -318,7 +317,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
                 } - ${getQuantidadeDeCandidatosPorEstado().toList().get(1).second} candidatos\n\n" +
                 "Instrutor Android: ${getProfessorAndroid().nome}\n" +
                 "Instrutor iOS: ${getProfessorIOS().nome}"
-    }
+    } //Altera o texto principal com as informações exigidas - void
 
     private fun salvarCSV(){
         val caminho = File(externalCacheDir!!.absolutePath+"/Sorted_AppAcademy_Candidates.csv")
@@ -334,5 +333,5 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
         }
         bf.flush()
         bf.close()
-    }
+    } //salva o csv em ordem alfabética na paste de cache do app - void
 }
