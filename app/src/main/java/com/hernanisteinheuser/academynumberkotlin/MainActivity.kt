@@ -22,7 +22,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
+class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { //lib de permissões de acesso
     val PICK_CSV_FILE = 2
     val REQUEST_ACESS = 182
     val REQUEST_WRITE = 183
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             intent?.action == Intent.ACTION_SEND -> { //se caso receber o arquivo csv compartilhado
                 if ("text/comma-separated-values" == intent.type) {
                     try{
-                        var bundle = intent.extras
+                        val bundle = intent.extras
                         val uri = bundle!!.get(Intent.EXTRA_STREAM) as Uri
                         csvToListPessoa(uri)
                         setTextWithCSV()
@@ -333,3 +333,16 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         csvWriter.close()
     }
 }
+
+
+/* Notas de dificuldade:
+Dificuldade em interpretar FileWrite, FileOutPutStream e FileInputStream (java.io em geral).
+Utilizei uma lib que me ajudou a pular o processo de leitura - kotlin-csv
+Apesar da kotlin-csv poder fazer a função de WRITE, sempre havia erros que apesar de observar
+vários exemplos encontrados na web, não houve solução. Então encontrei outra lib que facilitou
+o processo de WRITE - opencsv, por isso que se caso observar as dependencias do projetos irá
+se deparar com 2 libs de manipulam arquivos .csv
+
+
+
+ */
