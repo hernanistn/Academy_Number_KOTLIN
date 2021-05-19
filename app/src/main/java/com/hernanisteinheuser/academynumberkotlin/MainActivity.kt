@@ -4,15 +4,14 @@ package com.hernanisteinheuser.academynumberkotlin
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Environment
 import android.provider.DocumentsContract
 import android.widget.Button
 import android.widget.TextView
-import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import androidx.annotation.RequiresApi
 import com.hernanisteinheuser.academynumberkotlin.model.Pessoa
-import com.opencsv.CSVWriter
 import pub.devrel.easypermissions.EasyPermissions
 import pub.devrel.easypermissions.PermissionRequest
 import java.io.*
@@ -29,6 +28,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
     var dataClasses: ArrayList<Pessoa>? = null
     private lateinit var textView: TextView
     private lateinit var btn_choose_file: Button
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -39,9 +39,9 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
                     try{
                         val bundle = intent.extras
                         val uri = bundle!!.get(Intent.EXTRA_STREAM) as Uri
-                        csvToListPessoa(uri)
+                        csvToPessoa(uri)
                         setTextWithCSV()
-                        salvarCVSOrdemAlfabética()
+                        salvarCSV()
                     }catch (e:Exception){
                         textView.text = applicationContext.getString(R.string.error_text)
                     }
@@ -56,16 +56,17 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
     }
 
     ////functions
-    @ExperimentalStdlibApi
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == PICK_CSV_FILE && resultCode == Activity.RESULT_OK) {
             try {
-                csvToListPessoa(data!!.data!!)
+                csvToPessoa(data!!.data!!)
                 setTextWithCSV()
-                salvarCVSOrdemAlfabética()
+                salvarCSV()
             } catch (e: Exception) {
                 textView.text = applicationContext.getString(R.string.error_text)
             }
+
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
@@ -126,22 +127,23 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
         )
     }
 
-    private fun csvToListPessoa(data: Uri) {
-        val asas: InputStream
-        asas = contentResolver.openInputStream(data)!!
+    @RequiresApi(Build.VERSION_CODES.N)
+    private fun csvToPessoa(data: Uri){
         dataClasses = arrayListOf()
-        val data = csvReader().readAllWithHeader(asas)
-        data.forEach {
-            it.forEach {
-                val valuesplited = it.value.split(';')
-                dataClasses!!.add(
-                    Pessoa(
-                        valuesplited.get(0),
-                        valuesplited.get(1),
-                        valuesplited.get(2).filter { it.isDigit() }.toInt(),
-                        valuesplited.get(3)
+        val br = BufferedReader(contentResolver.openInputStream(data)!!.bufferedReader())
+        while (br.ready()){
+            br.lines().forEach {
+                if(!it.contains("Nome;Vaga;Idade;Estado")){ //remove o cabeçalho
+                   val splited = it.split(';')
+                    dataClasses!!.add(
+                        Pessoa(
+                            splited.get(0),
+                            splited.get(1),
+                            splited.get(2).filter { it.isDigit() }.toInt(),
+                            splited.get(3)
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -318,31 +320,19 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks { 
                 "Instrutor iOS: ${getProfessorIOS().nome}"
     }
 
-    private fun salvarCVSOrdemAlfabética() {
-        val csv =
-            Environment.getExternalStorageDirectory().absolutePath + "/Sorted_AppAcademy_Candidates.csv"
-        textView.text = textView.text.toString()+"\n\nLista sorteada salva no caminho: "+csv
-        val header = arrayOf("Nome", "Vaga", "Idade", "Estado") //cabeçalho do CSV
-        val csvWriter = CSVWriter(FileWriter(csv))
-        csvWriter.writeNext(header)
+    private fun salvarCSV(){
+        val caminho = File(externalCacheDir!!.absolutePath+"/Sorted_AppAcademy_Candidates.csv")
+        val fw = FileWriter(caminho)
+        val bf = BufferedWriter(fw)
+        textView.text = textView.text.toString()+"\n\n"+"Lista em ordem alfabetica salva em: "+caminho.path
+        bf.write("Nome;Vaga;Idade;Estado")
+        bf.newLine()
         dataClasses!!.sortBy { it.nome }
         dataClasses!!.forEach {
-            csvWriter.writeNext(arrayOf(it.nome, it.vaga, it.idade.toString(), it.estado))
+            bf.write("${it.nome};${it.vaga};${it.idade};${it.estado}")
+            bf.newLine()
         }
-        csvWriter.flush()
-        csvWriter.close()
+        bf.flush()
+        bf.close()
     }
 }
-
-
-/* Notas de dificuldade:
-Dificuldade em interpretar FileWrite, FileOutPutStream e FileInputStream (java.io em geral).
-Utilizei uma lib que me ajudou a pular o processo de leitura - kotlin-csv
-Apesar da kotlin-csv poder fazer a função de WRITE, sempre havia erros que apesar de observar
-vários exemplos encontrados na web, não houve solução. Então encontrei outra lib que facilitou
-o processo de WRITE - opencsv, por isso que se caso observar as dependencias do projetos irá
-se deparar com 2 libs de manipulam arquivos .csv
-
-
-
- */
